@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ETF 合成样本数据集报告 — 2026-06-28</title>
+<style>
+    body { font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+            margin: 20px; background: #fafafa; color: #333; }
+    h1 { color: #2c3e50; border-bottom: 3px solid #3498db;
+          padding-bottom: 10px; }
+    h2 { color: #2c3e50; margin-top: 30px; }
+    .meta { color: #888; font-weight: normal; font-size: 0.85em; }
+    .summary { background: #fff; padding: 15px; border-radius: 5px;
+                margin: 15px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    table { border-collapse: collapse; width: 100%; background: #fff;
+             font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
+    th { background: #2c3e50; color: white; font-weight: bold; }
+    tr:nth-child(even) { background: #f8f8f8; }
+    tr:hover { background: #fffde7; }
+    .num { font-family: "Consolas", monospace; }
+    .diff { color: #666; font-size: 11px; }
+    .quality.perfect { color: #27ae60; font-weight: bold; }
+    .quality.approximate { color: #e67e22; font-weight: bold; }
+    .image-block { background: #fff; padding: 15px; margin: 20px 0;
+                    border-radius: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .image-block img { width: 100%; max-width: 1200px; }
+    .method { background: #e8f4f8; padding: 15px; border-left: 4px solid #3498db;
+                margin: 15px 0; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>ETF 合成样本数据集报告</h1>
+<div class="summary">
+    <p><strong>生成日期：</strong>2026-06-28</p>
+    <p><strong>标的数量：</strong>20 个 ETF</p>
+    <p><strong>数据来源：</strong>custom/data/etf_klines/（hfq 后复权日线缓存）</p>
+    <p><strong>合成方法：</strong>Moment-Matched Block Bootstrap（矩匹配分块重采样）</p>
+    <p><strong>输出目录：</strong>custom/output/research/synthetic_data/</p>
+</div>
+
+<div class="method">
+    <h3>技术原理</h3>
+    <p><strong>Block Bootstrap（分块重采样）</strong>：将历史对数收益率序列划分为固定长度（21 天 ≈ 1 个月）
+       的连续块，随机抽取整个块进行重排拼接成新序列。保留块内的短期依赖结构
+       （波动率聚集、自相关），避免 IID Bootstrap 破坏时间序列记忆效应。</p>
+    <p><strong>Moment Matching（矩匹配重标度）</strong>：对重采样后的收益率做标准化 + 重标度，
+       强制使其样本均值和标准差精确等于原始值。因此合成的路径具备：</p>
+    <ul>
+        <li><strong>年化收益率与原始完全一致</strong>（对数收益率均值被精确匹配）</li>
+        <li><strong>年化波动率与原始完全一致</strong>（对数收益率标准差被精确匹配）</li>
+        <li><strong>Sharpe Ratio 完全一致</strong>（Sharpe = (μ - r_f) / σ）</li>
+        <li><strong>价格走势不同</strong>（Bootstrap 打乱了收益率顺序）</li>
+        <li>最大回撤有差异（路径依赖统计量，这正是合成数据的价值）</li>
+    </ul>
+</div>
+
+<h2>一、指标对比汇总</h2>
+<table>
+<thead>
+<tr>
+    <th rowspan="2">代码</th>
+    <th rowspan="2">名称</th>
+    <th rowspan="2">样本天数</th>
+    <th rowspan="2">年数</th>
+    <th colspan="3">年化收益率</th>
+    <th colspan="3">年化波动率</th>
+    <th colspan="3">Sharpe Ratio</th>
+    <th colspan="3">最大回撤</th>
+    <th rowspan="2">匹配质量</th>
+</tr>
+<tr>
+    <th>原始</th><th>合成</th><th>差异</th>
+    <th>原始</th><th>合成</th><th>差异</th>
+    <th>原始</th><th>合成</th><th>差异</th>
+    <th>原始</th><th>合成</th><th>差异</th>
+</tr>
+</thead>
+<tbody>
+
+        <tr>
+            <td>sh.518880</td>
+            <td>华安黄金ETF</td>
+            <td>3138</td>
+            <td>12.45</td>
+            <td class="num">9.78%</td>
+            <td class="num">9.78%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">15.14%</td>
+            <td class="num">15.14%</td>
+            <td class="num diff">-0.000000%</td>
+            <td class="num">0.5140</td>
+            <td class="num">0.5140</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-30.38%</td>
+            <td class="num">-26.53%</td>
+            <td class="num diff">+3.85%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.511380</td>
+            <td>博时可转债ETF</td>
+            <td>1508</td>
+            <td>5.98</td>
+            <td class="num">5.55%</td>
+            <td class="num">5.55%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">9.98%</td>
+            <td class="num">9.98%</td>
+            <td class="num diff">-0.000000%</td>
+            <td class="num">0.3557</td>
+            <td class="num">0.3557</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-15.90%</td>
+            <td class="num">-13.00%</td>
+            <td class="num diff">+2.90%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.510310</td>
+            <td>易方达沪深300ETF</td>
+            <td>3220</td>
+            <td>12.77</td>
+            <td class="num">7.36%</td>
+            <td class="num">7.36%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">22.18%</td>
+            <td class="num">22.18%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.2417</td>
+            <td class="num">0.2417</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-45.68%</td>
+            <td class="num">-34.66%</td>
+            <td class="num diff">+11.02%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.588200</td>
+            <td>科创芯片ETF嘉实</td>
+            <td>889</td>
+            <td>3.52</td>
+            <td class="num">50.64%</td>
+            <td class="num">50.64%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">40.37%</td>
+            <td class="num">40.37%</td>
+            <td class="num diff">-0.000000%</td>
+            <td class="num">1.2048</td>
+            <td class="num">1.2048</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-48.10%</td>
+            <td class="num">-50.61%</td>
+            <td class="num diff">-2.52%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.515880</td>
+            <td>国泰中证全指通信设备ETF</td>
+            <td>1646</td>
+            <td>6.53</td>
+            <td class="num">27.98%</td>
+            <td class="num">27.98%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">34.99%</td>
+            <td class="num">34.99%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.7426</td>
+            <td class="num">0.7426</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-46.97%</td>
+            <td class="num">-42.45%</td>
+            <td class="num diff">+4.52%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159941</td>
+            <td>广发纳指100ETF</td>
+            <td>2661</td>
+            <td>10.56</td>
+            <td class="num">19.78%</td>
+            <td class="num">19.78%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">23.19%</td>
+            <td class="num">23.19%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.7665</td>
+            <td class="num">0.7665</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-31.10%</td>
+            <td class="num">-31.87%</td>
+            <td class="num diff">-0.77%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159792</td>
+            <td>富国中证港股通互联网ETF</td>
+            <td>1147</td>
+            <td>4.55</td>
+            <td class="num">-13.55%</td>
+            <td class="num">-13.55%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">36.37%</td>
+            <td class="num">36.37%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">-0.4277</td>
+            <td class="num">-0.4277</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-59.66%</td>
+            <td class="num">-53.34%</td>
+            <td class="num diff">+6.32%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.512400</td>
+            <td>南方中证申万有色金属ETF</td>
+            <td>2137</td>
+            <td>8.48</td>
+            <td class="num">7.18%</td>
+            <td class="num">7.18%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">32.24%</td>
+            <td class="num">32.24%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.1605</td>
+            <td class="num">0.1605</td>
+            <td class="num diff">-0.000000</td>
+            <td class="num">-53.35%</td>
+            <td class="num">-52.14%</td>
+            <td class="num diff">+1.21%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159907</td>
+            <td>广发国证2000ETF</td>
+            <td>3603</td>
+            <td>14.29</td>
+            <td class="num">5.64%</td>
+            <td class="num">5.64%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">26.96%</td>
+            <td class="num">26.96%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.1352</td>
+            <td class="num">0.1352</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-62.68%</td>
+            <td class="num">-64.10%</td>
+            <td class="num diff">-1.42%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.510880</td>
+            <td>华泰柏瑞上证红利ETF</td>
+            <td>4722</td>
+            <td>18.73</td>
+            <td class="num">4.47%</td>
+            <td class="num">4.47%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">23.79%</td>
+            <td class="num">23.79%</td>
+            <td class="num diff">-0.000000%</td>
+            <td class="num">0.1038</td>
+            <td class="num">0.1038</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-75.00%</td>
+            <td class="num">-60.67%</td>
+            <td class="num diff">+14.33%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159570</td>
+            <td>汇添富国证港股通创新药ETF</td>
+            <td>585</td>
+            <td>2.32</td>
+            <td class="num">15.77%</td>
+            <td class="num">15.77%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">36.60%</td>
+            <td class="num">36.60%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.3762</td>
+            <td class="num">0.3762</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-42.09%</td>
+            <td class="num">-41.58%</td>
+            <td class="num diff">+0.50%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.515450</td>
+            <td>南方标普中国A股大盘红利低波50ETF</td>
+            <td>1536</td>
+            <td>6.09</td>
+            <td class="num">9.73%</td>
+            <td class="num">9.73%</td>
+            <td class="num diff">-0.000000%</td>
+            <td class="num">13.39%</td>
+            <td class="num">13.39%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.5773</td>
+            <td class="num">0.5773</td>
+            <td class="num diff">-0.000000</td>
+            <td class="num">-13.87%</td>
+            <td class="num">-17.22%</td>
+            <td class="num diff">-3.35%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.588170</td>
+            <td>科创半导体ETF华夏</td>
+            <td>296</td>
+            <td>1.17</td>
+            <td class="num">217.82%</td>
+            <td class="num">217.82%</td>
+            <td class="num diff">-0.000000%</td>
+            <td class="num">41.10%</td>
+            <td class="num">41.10%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">5.2511</td>
+            <td class="num">5.2511</td>
+            <td class="num diff">-0.000000</td>
+            <td class="num">-20.13%</td>
+            <td class="num">-14.18%</td>
+            <td class="num diff">+5.94%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159509</td>
+            <td>景顺长城纳斯达克科技ETF(QDII)</td>
+            <td>697</td>
+            <td>2.76</td>
+            <td class="num">42.01%</td>
+            <td class="num">42.01%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">31.53%</td>
+            <td class="num">31.53%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">1.2688</td>
+            <td class="num">1.2688</td>
+            <td class="num diff">-0.000000</td>
+            <td class="num">-30.47%</td>
+            <td class="num">-26.27%</td>
+            <td class="num diff">+4.20%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159781</td>
+            <td>易方达中证科创创业50ETF</td>
+            <td>1206</td>
+            <td>4.78</td>
+            <td class="num">7.87%</td>
+            <td class="num">7.87%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">30.43%</td>
+            <td class="num">30.43%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.1930</td>
+            <td class="num">0.1930</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-59.66%</td>
+            <td class="num">-43.66%</td>
+            <td class="num diff">+15.99%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.512010</td>
+            <td>易方达沪深300医药ETF</td>
+            <td>3078</td>
+            <td>12.21</td>
+            <td class="num">2.78%</td>
+            <td class="num">2.78%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">27.02%</td>
+            <td class="num">27.02%</td>
+            <td class="num diff">-0.000000%</td>
+            <td class="num">0.0288</td>
+            <td class="num">0.0288</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-65.51%</td>
+            <td class="num">-43.62%</td>
+            <td class="num diff">+21.89%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.513310</td>
+            <td>华泰柏瑞中证韩交所中韩半导体ETF(QDII)</td>
+            <td>848</td>
+            <td>3.36</td>
+            <td class="num">75.12%</td>
+            <td class="num">75.12%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">36.31%</td>
+            <td class="num">36.31%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">2.0140</td>
+            <td class="num">2.0140</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-22.68%</td>
+            <td class="num">-28.47%</td>
+            <td class="num diff">-5.79%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159263</td>
+            <td>易方达国证价值100ETF</td>
+            <td>235</td>
+            <td>0.93</td>
+            <td class="num">4.08%</td>
+            <td class="num">4.08%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">13.17%</td>
+            <td class="num">13.17%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.1581</td>
+            <td class="num">0.1581</td>
+            <td class="num diff">-0.000000</td>
+            <td class="num">-15.83%</td>
+            <td class="num">-9.68%</td>
+            <td class="num diff">+6.15%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sz.159558</td>
+            <td>易方达中证半导体材料设备主题ETF</td>
+            <td>491</td>
+            <td>1.94</td>
+            <td class="num">107.93%</td>
+            <td class="num">107.93%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">40.64%</td>
+            <td class="num">40.64%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">2.6063</td>
+            <td class="num">2.6063</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-25.05%</td>
+            <td class="num">-24.35%</td>
+            <td class="num diff">+0.70%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+        <tr>
+            <td>sh.516150</td>
+            <td>嘉实中证稀土产业ETF</td>
+            <td>1279</td>
+            <td>5.07</td>
+            <td class="num">15.00%</td>
+            <td class="num">15.00%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">33.09%</td>
+            <td class="num">33.09%</td>
+            <td class="num diff">+0.000000%</td>
+            <td class="num">0.3927</td>
+            <td class="num">0.3927</td>
+            <td class="num diff">+0.000000</td>
+            <td class="num">-58.39%</td>
+            <td class="num">-35.85%</td>
+            <td class="num diff">+22.54%</td>
+            <td class="quality perfect">perfect</td>
+        </tr>
+</tbody>
+</table>
+
+<h2>二、价格走势对比图</h2>
+
+        <div class="image-block">
+            <h3>sh.518880 华安黄金ETF <span class="meta">(3138 天 / 12.45 年)</span></h3>
+            <img src="sh_518880_comparison.png" alt="sh.518880 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.511380 博时可转债ETF <span class="meta">(1508 天 / 5.98 年)</span></h3>
+            <img src="sh_511380_comparison.png" alt="sh.511380 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.510310 易方达沪深300ETF <span class="meta">(3220 天 / 12.77 年)</span></h3>
+            <img src="sh_510310_comparison.png" alt="sh.510310 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.588200 科创芯片ETF嘉实 <span class="meta">(889 天 / 3.52 年)</span></h3>
+            <img src="sh_588200_comparison.png" alt="sh.588200 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.515880 国泰中证全指通信设备ETF <span class="meta">(1646 天 / 6.53 年)</span></h3>
+            <img src="sh_515880_comparison.png" alt="sh.515880 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159941 广发纳指100ETF <span class="meta">(2661 天 / 10.56 年)</span></h3>
+            <img src="sz_159941_comparison.png" alt="sz.159941 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159792 富国中证港股通互联网ETF <span class="meta">(1147 天 / 4.55 年)</span></h3>
+            <img src="sz_159792_comparison.png" alt="sz.159792 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.512400 南方中证申万有色金属ETF <span class="meta">(2137 天 / 8.48 年)</span></h3>
+            <img src="sh_512400_comparison.png" alt="sh.512400 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159907 广发国证2000ETF <span class="meta">(3603 天 / 14.29 年)</span></h3>
+            <img src="sz_159907_comparison.png" alt="sz.159907 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.510880 华泰柏瑞上证红利ETF <span class="meta">(4722 天 / 18.73 年)</span></h3>
+            <img src="sh_510880_comparison.png" alt="sh.510880 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159570 汇添富国证港股通创新药ETF <span class="meta">(585 天 / 2.32 年)</span></h3>
+            <img src="sz_159570_comparison.png" alt="sz.159570 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.515450 南方标普中国A股大盘红利低波50ETF <span class="meta">(1536 天 / 6.09 年)</span></h3>
+            <img src="sh_515450_comparison.png" alt="sh.515450 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.588170 科创半导体ETF华夏 <span class="meta">(296 天 / 1.17 年)</span></h3>
+            <img src="sh_588170_comparison.png" alt="sh.588170 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159509 景顺长城纳斯达克科技ETF(QDII) <span class="meta">(697 天 / 2.76 年)</span></h3>
+            <img src="sz_159509_comparison.png" alt="sz.159509 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159781 易方达中证科创创业50ETF <span class="meta">(1206 天 / 4.78 年)</span></h3>
+            <img src="sz_159781_comparison.png" alt="sz.159781 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.512010 易方达沪深300医药ETF <span class="meta">(3078 天 / 12.21 年)</span></h3>
+            <img src="sh_512010_comparison.png" alt="sh.512010 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.513310 华泰柏瑞中证韩交所中韩半导体ETF(QDII) <span class="meta">(848 天 / 3.36 年)</span></h3>
+            <img src="sh_513310_comparison.png" alt="sh.513310 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159263 易方达国证价值100ETF <span class="meta">(235 天 / 0.93 年)</span></h3>
+            <img src="sz_159263_comparison.png" alt="sz.159263 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sz.159558 易方达中证半导体材料设备主题ETF <span class="meta">(491 天 / 1.94 年)</span></h3>
+            <img src="sz_159558_comparison.png" alt="sz.159558 对比图">
+        </div>
+        <div class="image-block">
+            <h3>sh.516150 嘉实中证稀土产业ETF <span class="meta">(1279 天 / 5.07 年)</span></h3>
+            <img src="sh_516150_comparison.png" alt="sh.516150 对比图">
+        </div>
+
+<div class="method">
+    <h3>使用说明</h3>
+    <p>1. 合成数据 CSV 文件位于 <code>custom/output/research/synthetic_data/&lt;code&gt;_synthetic.csv</code>，
+       列结构与原始一致（date, open, high, low, close, volume, amount），可直接用于回测。</p>
+    <p>2. 合成数据保持与原始相同的统计性质（年化/波动/Sharpe），但价格走势不同，
+       可用于策略稳健性检验、过拟合检测、蒙特卡洛回测。</p>
+    <p>3. 若需生成多条路径（如 1000 条用于蒙特卡洛），可调用
+       <code>generate_multiple_paths()</code> 函数。</p>
+    <p>4. 最大回撤的差异是预期行为：最大回撤是路径依赖统计量，不同的收益率顺序必然产生不同的回撤序列，
+       这正是合成数据揭示"路径风险"的价值所在。</p>
+</div>
+
+</body>
+</html>

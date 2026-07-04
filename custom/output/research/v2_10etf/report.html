@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ETF轮动策略阶段2消融分析报告</title>
+<style>
+body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; background: #f5f5f5; }
+h1 { color: #2c3e50; border-bottom: 3px solid #9b59b6; padding-bottom: 10px; }
+h2 { color: #34495e; margin-top: 30px; }
+table { border-collapse: collapse; width: 100%; background: white; margin: 10px 0; font-size: 12px; }
+th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: center; }
+th { background: #9b59b6; color: white; }
+tr:nth-child(even) { background: #f9f9f9; }
+tr:hover { background: #f3e5f5; }
+img { max-width: 100%; border: 1px solid #ddd; margin: 10px 0; }
+.box { background: white; padding: 15px; border-left: 4px solid #9b59b6; margin: 15px 0; }
+.note { background: #fff9c4; padding: 10px; border-radius: 4px; margin: 10px 0; }
+.params { background: #e8f5e9; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>ETF轮动策略阶段2消融分析报告</h1>
+<p>生成时间: 2026-06-29 00:05:16</p>
+
+<div class="box">
+<b>阶段2目标</b>：验证回归动量+RSRS+双均线+反转风控的改进效果，通过消融分析定位各模块贡献。<br>
+<b>数据</b>：10个模拟ETF（5类资产×2风格），5年日线OHLCV数据。<br>
+<b>方法</b>：6种组合对比（纯动量 → 逐步加模块 → 全策略），等权基准参照。
+</div>
+
+<div class="params">
+<b>策略参数</b><br>
+  动量窗口: 25日（回归动量，年化×R²）<br>
+  RSRS窗口: 18日（High/Low回归斜率×R²）<br>
+  双均线: MA20/MA60（价>MA短且MA短>MA长）<br>
+  调仓频率: M（月频）<br>
+  持仓数量: 2只（等权）<br>
+  交易成本: 单边0.15%<br>
+  信号处理: shift(1)后移一天
+</div>
+
+<h2>一、消融分析指标对比</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>组合</th>
+      <th>年化收益</th>
+      <th>年化波动</th>
+      <th>Sharpe</th>
+      <th>最大回撤</th>
+      <th>Calmar</th>
+      <th>胜率</th>
+      <th>空仓占比</th>
+      <th>总换手</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>A_纯回归动量</td>
+      <td>29.46%</td>
+      <td>15.45%</td>
+      <td>1.620</td>
+      <td>-20.35%</td>
+      <td>1.448</td>
+      <td>53.1%</td>
+      <td>3.2%</td>
+      <td>38.0</td>
+    </tr>
+    <tr>
+      <td>B_动量+RSRS</td>
+      <td>30.24%</td>
+      <td>15.47%</td>
+      <td>1.656</td>
+      <td>-20.35%</td>
+      <td>1.486</td>
+      <td>53.2%</td>
+      <td>3.2%</td>
+      <td>37.0</td>
+    </tr>
+    <tr>
+      <td>C_动量+双均线</td>
+      <td>29.76%</td>
+      <td>15.38%</td>
+      <td>1.641</td>
+      <td>-22.87%</td>
+      <td>1.302</td>
+      <td>53.3%</td>
+      <td>5.0%</td>
+      <td>37.0</td>
+    </tr>
+    <tr>
+      <td>D_动量+反转风控</td>
+      <td>26.49%</td>
+      <td>15.27%</td>
+      <td>1.485</td>
+      <td>-20.35%</td>
+      <td>1.302</td>
+      <td>53.0%</td>
+      <td>3.2%</td>
+      <td>39.0</td>
+    </tr>
+    <tr>
+      <td>E_动量+RSRS+双均线</td>
+      <td>29.76%</td>
+      <td>15.38%</td>
+      <td>1.641</td>
+      <td>-22.87%</td>
+      <td>1.302</td>
+      <td>53.3%</td>
+      <td>5.0%</td>
+      <td>37.0</td>
+    </tr>
+    <tr>
+      <td>F_全策略</td>
+      <td>29.76%</td>
+      <td>15.38%</td>
+      <td>1.641</td>
+      <td>-22.87%</td>
+      <td>1.302</td>
+      <td>53.3%</td>
+      <td>5.0%</td>
+      <td>37.0</td>
+    </tr>
+    <tr>
+      <td>等权基准</td>
+      <td>16.64%</td>
+      <td>7.29%</td>
+      <td>1.875</td>
+      <td>-7.69%</td>
+      <td>2.163</td>
+      <td>56.0%</td>
+      <td>0.0%</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+<b>消融分析解读要点</b>：<br>
+1. A→B（加RSRS）：Sharpe是否提升？（知识库实证：0.21→1.33）<br>
+2. A→C（加双均线）：回撤是否降低？（知识库：回撤-45%→-34%）<br>
+3. A→D（加反转风控）：胜率是否提升？<br>
+4. E→F（加反转风控）：换手是否降低？<br>
+5. F vs 等权基准：全策略是否有超额？
+</div>
+
+<h2>二、资金曲线对比</h2>
+<img src="01_ablation_equity.png" alt="资金曲线对比">
+<p>说明：6种组合+等权基准的资金曲线，紫色为全策略F。</p>
+
+<h2>三、指标对比柱状图</h2>
+<img src="02_ablation_metrics.png" alt="指标对比">
+<p>说明：4个子图分别为年化收益、Sharpe、最大回撤、Calmar。灰色为等权基准。</p>
+
+<h2>四、全策略F资金曲线与回撤</h2>
+<img src="03_full_strategy_equity.png" alt="全策略F">
+<p>说明：上图紫色为全策略F净值，灰虚线为等权基准，红色阴影为回撤区间；下图为回撤曲线。</p>
+
+<h2>五、全策略F持仓分布</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>ETF</th>
+      <th>持仓天数占比(%)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ETF-LV</td>
+      <td>25.8</td>
+    </tr>
+    <tr>
+      <td>ETF-LG</td>
+      <td>25.6</td>
+    </tr>
+    <tr>
+      <td>ETF-SV</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>ETF-SG</td>
+      <td>26.0</td>
+    </tr>
+    <tr>
+      <td>ETF-CY</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>ETF-TE</td>
+      <td>10.5</td>
+    </tr>
+    <tr>
+      <td>ETF-CO</td>
+      <td>27.5</td>
+    </tr>
+    <tr>
+      <td>ETF-ME</td>
+      <td>24.0</td>
+    </tr>
+    <tr>
+      <td>ETF-BO</td>
+      <td>16.2</td>
+    </tr>
+    <tr>
+      <td>ETF-OV</td>
+      <td>15.6</td>
+    </tr>
+  </tbody>
+</table>
+<p>说明：全策略F各ETF持仓天数占比，空仓占比=5.0%。</p>
+
+<h2>六、阶段1 vs 阶段2对比</h2>
+<div class="box">
+<b>阶段1</b>（3ETF + ROC60 + 月频 + 1只持仓）：年化-7.32%, Sharpe-0.34, 回撤-47.09%<br>
+<b>阶段2全策略F</b>（10ETF + 回归动量25日 + RSRS + 双均线 + 反转风控 + 月频 + 2只持仓）：
+年化29.76%, Sharpe1.641, 
+回撤-22.87%<br>
+<b>等权基准</b>：年化16.64%, Sharpe1.875, 
+回撤-7.69%
+</div>
+
+</body>
+</html>

@@ -146,3 +146,17 @@ pytrader/user_config.sh
 *.parquet
 
 **.DS_Store
+
+# IDE
+.ai/
+.trae/
+
+# Market data (CSV klines, too large for git)
+custom/data/
+
+# Generated report files
+**/回测结果/
+**/标准报告输出/
+**/蒙特卡洛报告/
+**/pipeline_report/
+**/__pycache__/

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ETF轮动策略阶段1回测报告</title>
+<style>
+body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; background: #f5f5f5; }
+h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+h2 { color: #34495e; margin-top: 30px; }
+table { border-collapse: collapse; width: 100%; background: white; margin: 10px 0; font-size: 13px; }
+th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: center; }
+th { background: #3498db; color: white; }
+tr:nth-child(even) { background: #f9f9f9; }
+tr:hover { background: #e3f2fd; }
+img { max-width: 100%; border: 1px solid #ddd; margin: 10px 0; }
+.summary-box { background: white; padding: 15px; border-left: 4px solid #3498db; margin: 15px 0; }
+.note { background: #fff9c4; padding: 10px; border-radius: 4px; margin: 10px 0; }
+.params { background: #e8f5e9; padding: 10px; border-radius: 4px; margin: 10px 0; font-family: monospace; }
+</style>
+</head>
+<body>
+<h1>ETF轮动策略阶段1回测报告</h1>
+<p>生成时间: 2026-06-28 23:41:14</p>
+
+<div class="summary-box">
+<b>阶段1目标</b>：验证策略框架正确性，跑通"数据→信号→回测→报告"全流程。<br>
+<b>数据</b>：3个模拟ETF（GBM+动量持续性+市场状态切换），5年日线数据。<br>
+<b>策略</b>：60日ROC动量，月频调仓，持有动量最强1只，全池动量<0空仓。
+</div>
+
+<div class="params">
+<b>策略参数</b><br>
+  动量窗口: 60日<br>
+  调仓频率: M (月频)<br>
+  持仓数量: 1只（动量最强）<br>
+  空仓条件: 最强动量 < 0<br>
+  交易成本: 单边0.15%（佣金万2.5+滑点万3）<br>
+  信号处理: shift(1)后移一天，避免未来函数
+</div>
+
+<h2>一、绩效指标对比</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>总收益</th>
+      <th>年化收益</th>
+      <th>年化波动</th>
+      <th>Sharpe</th>
+      <th>最大回撤</th>
+      <th>Calmar</th>
+      <th>胜率</th>
+      <th>盈亏比</th>
+      <th>年数</th>
+      <th>交易日数</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>轮动策略</th>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>0.0</td>
+      <td>0.0%</td>
+      <td>0.0</td>
+      <td>0.0%</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>1260.0</td>
+    </tr>
+    <tr>
+      <th>等权基准</th>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>0.0%</td>
+      <td>0.0</td>
+      <td>0.0%</td>
+      <td>0.0</td>
+      <td>0.0%</td>
+      <td>0.0</td>
+      <td>5.0</td>
+      <td>1260.0</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+<b>交易成本统计</b>：总换手=0.00, 总成本=0.00%（占初始资金比例）
+</div>
+
+<h2>二、资金曲线与回撤</h2>
+<img src="01_equity_drawdown.png" alt="资金曲线与回撤">
+<p>说明：上图蓝线为策略净值，灰线为等权基准净值，红色阴影为回撤区间；下图为完整周期回撤曲线。</p>
+
+<h2>三、持仓信号与动量因子</h2>
+<img src="02_signal_momentum.png" alt="持仓信号与动量因子">
+<p>说明：上图为每日持仓标的（堆叠面积），下图为60日ROC动量因子曲线，虚线为0轴。</p>
+
+<h2>四、模拟ETF净值走势</h2>
+<img src="03_etf_nav.png" alt="ETF净值走势">
+<p>说明：3个模拟ETF归一化净值，起始=1.0。</p>
+
+<h2>五、阶段1结论与下一步</h2>
+<div class="summary-box">
+<b>验证要点</b>：
+1. 策略框架是否正确跑通（数据→信号→回测→报告）
+2. 轮动策略相对等权基准是否有超额收益
+3. 动量因子是否能识别强弱势ETF
+4. 回撤控制是否合理（全池动量<0空仓机制）
+
+<b>下一步（阶段2）</b>：
+- 扩展到10个模拟ETF
+- 因子升级：回归动量（年化收益×R²，过滤妖基）
+- 加入L1双均线过滤 + L2双止损
+- 信号过滤：调仓阈值10%
+</div>
+
+</body>
+</html>

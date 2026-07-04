@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-06-29T08:44:39.785741",
+  "strategy_metrics": {
+    "total_return": 2.6794327570964254,
+    "annual_return": 0.2976458258934822,
+    "annual_volatility": 0.1538353637395139,
+    "sharpe": 1.6412541917577252,
+    "max_drawdown": -0.2286756815991554,
+    "calmar": 1.301606816308628,
+    "win_rate": 0.5329991645781119,
+    "profit_loss_ratio": 1.1847824835722116,
+    "years": 5.0,
+    "n_days": 1260
+  },
+  "verdicts": {
+    "公平基准族": {
+      "checks": [
+        "✗ 策略Sharpe(1.641) ≤ 等权全池(2.052) — 未通过基础有效性",
+        "✓ 策略Sharpe > 动量Top2买入持有(1.459) — 轮动动作有效",
+        "✓ 策略Sharpe位于随机分布98.0分位 (>=95%) — 非偶然alpha"
+      ],
+      "overall_pass": false,
+      "verdict_summary": "策略未通过公平基准检验"
+    },
+    "Walk-Forward": {
+      "checks": [
+        "✗ 平均Sharpe = 0.000 (非正)",
+        "✗ 正Sharpe窗口占比 0% (<60%) — 不稳定",
+        "✓ Sharpe变异系数 0.00 (<1.0) — 各期稳定"
+      ],
+      "overall_pass": false,
+      "verdict_summary": "策略未通过Walk-Forward检验"
+    },
+    "参数敏感性": {
+      "shapes": [
+        "PLATEAU",
+        "PLATEAU",
+        "PLATEAU",
+        "PLATEAU"
+      ],
+      "verdict_summary": "全部参数呈plateau — 策略稳健",
+      "overall_pass": true
+    },
+    "滑点压力": {
+      "sensitivity": "LOW",
+      "decay_rate": 0.07117567518015148,
+      "verdict_summary": "Sharpe衰减率 7.1% (LOW)",
+      "overall_pass": true
+    },
+    "随机扰动": {
+      "percentile": 100.0,
+      "z_score": 2.4975526943157162,
+      "verdict_summary": "策略Sharpe位于100.0分位 (>=95%) — 非偶然alpha",
+      "overall_pass": true
+    }
+  },
+  "n_pass": 3,
+  "overall_pass": false,
+  "benchmark_details": {
+    "strategy_sharpe": 1.6412541917577252,
+    "equal_weight_sharpe": 2.052240423872731,
+    "momentum_buyhold_sharpe": 1.4591977584948996,
+    "random_top2_mean": 0.6650380425936061,
+    "random_top2_p95": 1.2995852604622757,
+    "strategy_percentile": 98.0,
+    "z_score": 2.325862232656301
+  }
+}
