@@ -160,3 +160,6 @@ custom/data/
 **/蒙特卡洛报告/
 **/pipeline_report/
 **/__pycache__/
+
+# Logs
+qbot-log.txt

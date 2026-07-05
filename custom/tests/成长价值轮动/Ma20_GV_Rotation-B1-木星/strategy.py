@@ -268,15 +268,13 @@ def build_core(slope_thresh=0.002, sw_mid=0.17, sw_deep=0.17, st=0.09, cd=8,
 
 if __name__ == '__main__':
     print("=" * 80)
-    print("  X14 统一策略干净版")
+    print("  X14 统一策略干净版 (v2.0-lite)")
     print("=" * 80)
 
     sig, wt = build_core()
     result = run_backtest(sig, wt, impact_slippage=0.0005)
     m = calc_metrics(result)
     sw = count_switches(sig, wt)
-    result_sl = run_backtest(sig, wt, impact_slippage=0.0005)
-    m_sl = calc_metrics(result_sl)
 
     print(f"\n  年化={m['ann']*100:.2f}%")
     print(f"  最大回撤={m['dd']*100:.2f}%")
@@ -284,6 +282,5 @@ if __name__ == '__main__':
     print(f"  Calmar={m['calmar']:.3f}")
     print(f"  交易次数={m['n_trades']}")
     print(f"  方向切换={sw['dir']}  空仓切换={sw['cash']}")
-    print(f"  滑点(手续费1bps+冲击5bps): 年化={m_sl['ann']*100:.2f}%  "
-          f"Calmar={m_sl['calmar']:.3f}")
+    print(f"  总滑点(佣金1bps+冲击5bps): 已包含在上方年化中")
     print("=" * 80)
