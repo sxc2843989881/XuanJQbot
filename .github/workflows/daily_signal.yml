@@ -31,7 +31,7 @@ jobs:
 
       - name: 安装依赖
         run: |
-          pip install baostock pandas numpy matplotlib
+          pip install --only-binary=:all: baostock pandas numpy matplotlib
 
       - name: 生成信号页面
         run: python signal_page/generate.py
