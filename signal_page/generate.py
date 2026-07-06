@@ -171,10 +171,10 @@ def make_chart(df, rt=1.3):
     
     # 上：比价 + MA20
     ax = axes[0]
-    ax.plot(dates, df.loc[dates, 'ratio'], color='#333333', lw=1.5, label='成长/价值比价')
+    ax.plot(dates, df.loc[dates, 'ratio'], color='#333333', lw=1.5, label='成长/价值')
     ax.plot(dates, df.loc[dates, 'ma20'], color='#E74C3C', ls='--', lw=1, label=f'MA{MA_PERIOD}')
     ax.axhline(1.0, color='gray', ls=':', alpha=0.4)
-    ax.set_ylabel('比价', fontsize=9)
+    ax.set_ylabel('成长/价值', fontsize=9)
     ax.legend(fontsize=8, loc='upper left')
     ax.grid(alpha=0.2)
     
@@ -318,7 +318,7 @@ def make_html(signal, df, chart_b64):
           <span class="value">{latest['T']:+.3f}</span></div>
         <div class="row"><span class="label">SLOPE (斜率)</span>
           <span class="value">{latest['slope']:+.6f}</span></div>
-        <div class="row"><span class="label">比价偏离MA20</span>
+        <div class="row"><span class="label">成长/价值偏离MA20</span>
           <span class="value">{latest['dev_pct']:+.2f}%</span></div>
         <div class="row"><span class="label">持仓标的</span>
           <span class="value">{latest['target']}</span></div>
