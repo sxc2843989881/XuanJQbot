@@ -10,11 +10,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['axes.unicode_minus'] = False
 warnings.filterwarnings('ignore')
 
 # ========== 配置 ==========
@@ -195,14 +190,14 @@ def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
         ax.plot(nav_show.index, nav_show.values, color='#E74C3C', lw=2)
         ax.fill_between(nav_show.index, init_val, nav_show.values, color='#E74C3C', alpha=0.15)
         ax.axhline(init_val, color='gray', ls=':', lw=0.8)
-        ax.annotate(f'{nav_show.iloc[-1]:.0f}元',
+        ax.annotate(f'{nav_show.iloc[-1]:.0f}',
             xy=(nav_show.index[-1], nav_show.iloc[-1]),
             fontsize=11, fontweight='bold', color='#E74C3C',
             va='bottom', ha='left')
         pnl_pct = (nav_show.iloc[-1]/init_val - 1)*100
-        ax.set_title(f'实盘走势（起点1万元） 当前 {nav_show.iloc[-1]:.0f}元  ({pnl_pct:+.2f}%)',
-            fontsize=12, fontweight='bold')
-        ax.set_ylabel('收益(元)', fontsize=9)
+        ax.set_title(f'P&L (10,000 start)  Now {nav_show.iloc[-1]:.0f}  ({pnl_pct:+.2f}%)',
+            fontsize=11, fontweight='bold')
+        ax.set_ylabel('P&L (CNY)', fontsize=9)
         ax.set_xlim(x_start, x_end)
         ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
@@ -214,10 +209,10 @@ def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
     
     # 比价 + MA20
     ax = axes[ax_next]
-    ax.plot(dates, df.loc[dates, 'ratio'], color='#333333', lw=1.5, label='成长/价值')
+    ax.plot(dates, df.loc[dates, 'ratio'], color='#333333', lw=1.5, label='GV Ratio')
     ax.plot(dates, df.loc[dates, 'ma20'], color='#E74C3C', ls='--', lw=1, label='MA20')
     ax.axhline(1.0, color='gray', ls=':', alpha=0.4)
-    ax.set_ylabel('成长/价值', fontsize=9)
+    ax.set_ylabel('GV Ratio', fontsize=9)
     ax.legend(fontsize=8, loc='upper left')
     ax.grid(alpha=0.2)
     
@@ -248,9 +243,9 @@ def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
     ax = axes[ax_next + 2]
     ax.fill_between(dates, 0, df.loc[dates, 'wt'], color='#9B59B6', alpha=0.4, step='mid')
     ax.plot(dates, df.loc[dates, 'wt'], color='#9B59B6', lw=1, drawstyle='steps-post')
-    ax.set_ylabel('仓位', fontsize=9)
+    ax.set_ylabel('Position', fontsize=9)
     ax.set_ylim(-0.05, 1.05)
-    ax.set_xlabel('日期', fontsize=9)
+    ax.set_xlabel('Date', fontsize=9)
     ax.grid(alpha=0.2)
     
     plt.tight_layout()
