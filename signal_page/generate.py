@@ -200,11 +200,9 @@ def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
             fontsize=12, fontweight='bold')
         ax.set_ylabel('收益(元)', fontsize=9)
         ax.set_xlim(x_start, x_end)
-        range_days = (x_end - x_start).days
-        tick_step = max(1, range_days // 8)
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=tick_step))
+        ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
-        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=7)
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=6)
         ax.grid(alpha=0.2)
     
     ax_next = 1 if nav is not None else 0
