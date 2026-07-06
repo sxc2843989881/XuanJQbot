@@ -398,22 +398,18 @@ def main():
     dir_now = last['dir']; dir_prev = prev['dir']
     wt_now = last['wt']; wt_prev = prev['wt']
     
-    # 建议文本
+    # 建议文本 - 直接写明操作
     target = f'{NAME_G}({CODE_G})' if dir_now=='growth' else f'{NAME_V}({CODE_V})' if dir_now=='value' else '空仓'
     if wt_now == 0:
-        advice = f'⏸ 建议空仓观望。当前多空信号不明确，T值和斜率均偏弱，等待趋势明朗后再入场。'
+        advice = f'空仓 0%'
     elif dir_now != dir_prev:
-        # 方向切换
         old_target = f'{NAME_G}({CODE_G})' if dir_prev=='growth' else f'{NAME_V}({CODE_V})'
-        new_target = f'{NAME_G}({CODE_G})' if dir_now=='growth' else f'{NAME_V}({CODE_V})'
-        advice = f'🔄 建议切换：您当前持有 {old_target}，需切换到 {new_target}，仓位 {wt_now*100:.0f}%。'
+        advice = f'切换：卖出 {old_target}，买入 {target}，仓位 {wt_now*100:.0f}%'
     elif wt_now < wt_prev:
-        # 降仓（E5或BIAS触发）
-        advice = f'⚠️ 建议降仓：您当前持有 {target}，仓位应从 {wt_prev*100:.0f}% 降低至 {wt_now*100:.0f}%。'
+        advice = f'降仓：{target} 从 {wt_prev*100:.0f}% 降低至 {wt_now*100:.0f}%'
     else:
-        # 维持
-        hold_text = '买入/持有' if wt_now >= 1.0 else f'持有'
-        advice = f'📌 建议{hold_text} {target}，仓位 {wt_now*100:.0f}%。'
+        hold_text = '买入' if wt_now >= 1.0 else '持有'
+        advice = f'{hold_text} {target}，仓位 {wt_now*100:.0f}%'
     
     latest = {
         'date': df.index[-1],
