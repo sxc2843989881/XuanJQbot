@@ -2,7 +2,7 @@
 本脚本无本地依赖，可直接在 GitHub Actions 上运行。
 依赖: pip install baostock pandas numpy matplotlib
 """
-import os, base64, io, warnings
+import os, base64, io, warnings, argparse
 from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
@@ -426,6 +426,11 @@ def make_html(signal, df, chart_b64, trades=None):
 
 # ========== 主流程 ==========
 def main():
+    parser = argparse.ArgumentParser(description='B1-木星 每日信号生成')
+    parser.add_argument('--strategy', type=str, default=None,
+        help='策略名称，指定后输出到 docs/{策略名}/index.html')
+    args = parser.parse_args()
+
     print('=' * 50)
     print('  B1-木星 每日信号生成器')
     print(f'  {datetime.now().strftime("%Y-%m-%d %H:%M")}')
@@ -538,6 +543,8 @@ def main():
     
     # 6. 输出
     out_dir = os.path.join(os.path.dirname(__file__) or '.', 'docs')
+    if args.strategy:
+        out_dir = os.path.join(out_dir, args.strategy)
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, 'index.html')
     with open(out_path, 'w', encoding='utf-8') as f:

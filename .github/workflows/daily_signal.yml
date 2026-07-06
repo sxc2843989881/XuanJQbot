@@ -34,7 +34,7 @@ jobs:
           pip install --only-binary=:all: baostock pandas numpy matplotlib
 
       - name: 生成信号页面
-        run: python signal_page/generate.py
+        run: python signal_page/generate.py --strategy "${{ github.event.repository.name }}"
 
       - name: 上传 Pages 制品
         uses: actions/upload-pages-artifact@v3
