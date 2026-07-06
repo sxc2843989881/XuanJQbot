@@ -410,22 +410,26 @@ def main():
     print('\n计算信号...')
     df = compute_signals(g, v, PARAMS)
     
-    # 3. 计算P&L（初始10000元）
+    # 3. 计算P&L（从今日起初始10000元，往后累积）
     print('\n计算P&L...')
     daily_g_ret = g.pct_change()
     daily_v_ret = v.pct_change()
+    INIT_CAP = 10000
+    START_DATE = df.index[-1]  # 从最新交易日开始
+    nav = pd.Series(INIT_CAP, index=df.index)
     strat_ret = pd.Series(0.0, index=df.index)
     for i in range(1, len(df)):
-        ps = df.iloc[i-1]  # T日的信号→T+1日执行
+        if df.index[i] <= START_DATE:
+            continue  # 今天之前不计算收益（从今天开始）
+        ps = df.iloc[i-1]
         if ps['wt'] > 0 and ps['dir'] == 'growth':
             strat_ret.iloc[i] = daily_g_ret.iloc[i] * ps['wt']
         elif ps['wt'] > 0 and ps['dir'] == 'value':
             strat_ret.iloc[i] = daily_v_ret.iloc[i] * ps['wt']
-    INIT_CAP = 10000
-    nav = (1 + strat_ret).cumprod() * INIT_CAP
+        nav.iloc[i] = nav.iloc[i-1] * (1 + strat_ret.iloc[i])
     current_nav = nav.iloc[-1]
     profit_pct = (current_nav / INIT_CAP - 1) * 100
-    print(f'  初始资金: {INIT_CAP}  →  当前: {current_nav:.2f}  ({profit_pct:+.2f}%)')
+    print(f'  起点: {START_DATE.date()}  初始资金: {INIT_CAP}  →  当前: {current_nav:.2f}  ({profit_pct:+.2f}%)')
 
     # 4. 最新信号
     last = df.iloc[-1]
