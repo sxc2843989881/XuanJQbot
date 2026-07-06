@@ -162,10 +162,14 @@ def compute_signals(g_close, v_close, params):
     return df
 
 # ========== 图表生成 ==========
-def make_chart(df, rt=1.3):
-    """生成信号图表，返回 base64 PNG"""
-    fig, axes = plt.subplots(3, 1, figsize=(12, 7),
-        gridspec_kw={'height_ratios': [2, 1, 1]})
+def make_chart(df, rt=1.3, nav=None):
+    """生成信号图表，返回 base64 PNG
+    nav: P&L净值序列（可选），用于第4个子图
+    """
+    n_rows = 4 if nav is not None else 3
+    ratios = [2, 1, 1, 1] if nav is not None else [2, 1, 1]
+    fig, axes = plt.subplots(n_rows, 1, figsize=(12, 7 + (1 if nav is not None else 0)),
+        gridspec_kw={'height_ratios': ratios})
     
     dates = df.index[-120:]  # 最近120天
     
@@ -207,8 +211,18 @@ def make_chart(df, rt=1.3):
     ax.plot(dates, df.loc[dates, 'wt'], color='#9B59B6', lw=1, drawstyle='steps-post')
     ax.set_ylabel('仓位', fontsize=9)
     ax.set_ylim(-0.05, 1.05)
-    ax.set_xlabel('日期', fontsize=9)
     ax.grid(alpha=0.2)
+    
+    # P&L曲线（第4个子图）
+    if nav is not None:
+        ax = axes[3]
+        nav_recent = nav.reindex(dates).ffill()
+        ax.plot(nav_recent.index, nav_recent.values, color='#E74C3C', lw=1.5)
+        ax.fill_between(nav_recent.index, 10000, nav_recent.values, color='#E74C3C', alpha=0.1)
+        ax.axhline(10000, color='gray', ls=':', lw=0.5)
+        ax.set_ylabel('账户净值(元)', fontsize=9)
+        ax.set_xlabel('日期', fontsize=9)
+        ax.grid(alpha=0.2)
     
     plt.tight_layout()
     buf = io.BytesIO()
@@ -347,6 +361,10 @@ def make_html(signal, df, chart_b64):
       <div class="num">{int(df['T'].tail(60).abs().mean()*100)/100:.2f}</div>
       <div class="lbl">T均值(60天)</div>
     </div>
+    <div class="stat-card">
+      <div class="num" style="color:{'#E74C3C' if latest.get('profit_pct',0)>=0 else '#2ECC71'}">{latest.get('nav',0):.0f}</div>
+      <div class="lbl">账户净值(元)  {latest.get('profit_pct',0):+.2f}%</div>
+    </div>
   </div>
   
   <div class="rec-card">
@@ -392,7 +410,24 @@ def main():
     print('\n计算信号...')
     df = compute_signals(g, v, PARAMS)
     
-    # 3. 最新信号
+    # 3. 计算P&L（初始10000元）
+    print('\n计算P&L...')
+    daily_g_ret = g.pct_change()
+    daily_v_ret = v.pct_change()
+    strat_ret = pd.Series(0.0, index=df.index)
+    for i in range(1, len(df)):
+        ps = df.iloc[i-1]  # T日的信号→T+1日执行
+        if ps['wt'] > 0 and ps['dir'] == 'growth':
+            strat_ret.iloc[i] = daily_g_ret.iloc[i] * ps['wt']
+        elif ps['wt'] > 0 and ps['dir'] == 'value':
+            strat_ret.iloc[i] = daily_v_ret.iloc[i] * ps['wt']
+    INIT_CAP = 10000
+    nav = (1 + strat_ret).cumprod() * INIT_CAP
+    current_nav = nav.iloc[-1]
+    profit_pct = (current_nav / INIT_CAP - 1) * 100
+    print(f'  初始资金: {INIT_CAP}  →  当前: {current_nav:.2f}  ({profit_pct:+.2f}%)')
+
+    # 4. 最新信号
     last = df.iloc[-1]
     prev = df.iloc[-2] if len(df) >= 2 else last
     dir_now = last['dir']; dir_prev = prev['dir']
@@ -420,13 +455,16 @@ def main():
         'dev_pct': last['dev'] * 100,
         'target': target,
         'advice': advice,
+        'nav': current_nav,
+        'profit_pct': profit_pct,
+        'init_cap': INIT_CAP,
     }
     
     print(f'  最新信号: {latest["dir"]}  仓位: {latest["wt"]*100:.0f}%  T={last["T"]:+.3f}')
     
-    # 4. 生成图表
+    # 5. 生成图表
     print('\n生成图表...')
-    chart_b64 = make_chart(df, PARAMS['rt'])
+    chart_b64 = make_chart(df, PARAMS['rt'], nav)
     print('  ✅ 图表生成完成')
     
     # 5. 生成HTML
