@@ -394,24 +394,37 @@ def main():
     
     # 3. 最新信号
     last = df.iloc[-1]
+    prev = df.iloc[-2] if len(df) >= 2 else last
+    dir_now = last['dir']; dir_prev = prev['dir']
+    wt_now = last['wt']; wt_prev = prev['wt']
+    
+    # 建议文本
+    target = f'{NAME_G}({CODE_G})' if dir_now=='growth' else f'{NAME_V}({CODE_V})' if dir_now=='value' else '空仓'
+    if wt_now == 0:
+        advice = f'⏸ 建议空仓观望。当前多空信号不明确，T值和斜率均偏弱，等待趋势明朗后再入场。'
+    elif dir_now != dir_prev:
+        # 方向切换
+        old_target = f'{NAME_G}({CODE_G})' if dir_prev=='growth' else f'{NAME_V}({CODE_V})'
+        new_target = f'{NAME_G}({CODE_G})' if dir_now=='growth' else f'{NAME_V}({CODE_V})'
+        advice = f'🔄 建议切换：您当前持有 {old_target}，需切换到 {new_target}，仓位 {wt_now*100:.0f}%。'
+    elif wt_now < wt_prev:
+        # 降仓（E5或BIAS触发）
+        advice = f'⚠️ 建议降仓：您当前持有 {target}，仓位应从 {wt_prev*100:.0f}% 降低至 {wt_now*100:.0f}%。'
+    else:
+        # 维持
+        hold_text = '买入/持有' if wt_now >= 1.0 else f'持有'
+        advice = f'📌 建议{hold_text} {target}，仓位 {wt_now*100:.0f}%。'
+    
     latest = {
         'date': df.index[-1],
-        'dir': last['dir'],
-        'wt': last['wt'],
+        'dir': dir_now,
+        'wt': wt_now,
         'T': last['T'],
         'slope': last['slope'],
         'dev_pct': last['dev'] * 100,
-        'target': f'{NAME_G}({CODE_G})' if last['dir']=='growth'
-            else f'{NAME_V}({CODE_V})' if last['dir']=='value'
-            else '空仓',
-        'advice': '',
+        'target': target,
+        'advice': advice,
     }
-    if last['wt'] == 0:
-        latest['advice'] = '⏸ 建议空仓观望。当前多空信号不明确，T值和斜率均偏弱，等待趋势明朗后再入场。'
-    elif last['dir'] == 'growth':
-        latest['advice'] = f'📈 建议买入/持有 成长ETF({CODE_G})。比价在均线上方，T值偏正，成长风格占优。'
-    else:
-        latest['advice'] = f'📉 建议买入/持有 价值ETF({CODE_V})。比价在均线下方，T值偏负，价值风格占优。'
     
     print(f'  最新信号: {latest["dir"]}  仓位: {latest["wt"]*100:.0f}%  T={last["T"]:+.3f}')
     
