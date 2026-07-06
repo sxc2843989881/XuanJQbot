@@ -167,7 +167,7 @@ def compute_signals(g_close, v_close, params):
     return df
 
 # ========== 图表生成 ==========
-def make_chart(df, rt=1.3, nav=None):
+def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
     """生成信号图表，返回 base64 PNG
     nav: P&L净值序列（可选），显示在顶部
     """
@@ -176,16 +176,16 @@ def make_chart(df, rt=1.3, nav=None):
     fig, axes = plt.subplots(n_rows, 1, figsize=(12, 8),
         gridspec_kw={'height_ratios': ratios})
     
-    # P&L实盘走势（最顶部，30天窗口）
+    # P&L实盘走势（最顶部，从起点日开始，最多30天）
     if nav is not None:
         ax = axes[0]
-        nav_dates = nav.index[-30:]  # 最近30天
+        nav_valid = nav[nav.index >= start_date] if start_date is not None else nav
+        nav_dates = nav_valid.index[-30:]
         nav_recent = nav.reindex(nav_dates).ffill()
-        init_val = 10000
+        init_val = init_cap
         ax.plot(nav_recent.index, nav_recent.values, color='#E74C3C', lw=2)
         ax.fill_between(nav_recent.index, init_val, nav_recent.values, color='#E74C3C', alpha=0.15)
         ax.axhline(init_val, color='gray', ls=':', lw=0.8)
-        # 标注最新值
         ax.annotate(f'{nav_recent.iloc[-1]:.0f}元',
             xy=(nav_recent.index[-1], nav_recent.iloc[-1]),
             fontsize=11, fontweight='bold', color='#E74C3C',
@@ -248,7 +248,7 @@ def make_chart(df, rt=1.3, nav=None):
     return base64.b64encode(buf.read()).decode()
 
 # ========== HTML 生成 ==========
-def make_html(signal, df, chart_b64):
+def make_html(signal, df, chart_b64, trades=None):
     """生成信号页面 HTML"""
     latest = signal
     pos_cn = {'growth': '📈 成长', 'value': '📉 价值', 'cash': '⏸ 空仓'}
@@ -399,6 +399,15 @@ def make_html(signal, df, chart_b64):
     </table>
   </div>
   
+  <div class="signal-card">
+    <div class="title" style="font-size:14px;font-weight:600;margin-bottom:8px">📋 调仓记录</div>
+    <table>
+      <tr><th>日期</th><th>操作</th><th>从</th><th>到</th></tr>
+      {''.join(f'<tr><td>{t["date"]}</td><td>{t["action"]}</td><td>{t["from"]}</td><td>{t["to"]}</td></tr>' for t in (trades or [])[-20:][::-1])}
+    </table>
+    <div style="font-size:11px;color:#95a5a6;margin-top:4px">显示最近20笔，最新在前</div>
+  </div>
+  
   <div class="footer">
     B1-木星 成长价值轮动策略 · 自动生成 · 仅供参考，不构成投资建议<br>
     数据来源: baostock · {datetime.now().strftime('%Y-%m-%d')}
@@ -494,14 +503,30 @@ def main():
     
     print(f'  最新信号: {latest["dir"]}  仓位: {latest["wt"]*100:.0f}%  T={last["T"]:+.3f}')
     
-    # 5. 生成图表
+    # 5. 调仓记录
+    print('\n生成调仓记录...')
+    trades = []
+    dir_map = {'growth': NAME_G, 'value': NAME_V, 'cash': '空仓'}
+    for i in range(1, len(df)):
+        ps = df.iloc[i-1]; cs = df.iloc[i]
+        if ps['dir'] != cs['dir'] or abs(ps['wt'] - cs['wt']) > 0.01:
+            action = '切换' if ps['dir'] != cs['dir'] else '调仓'
+            trades.append({
+                'date': df.index[i].strftime('%Y-%m-%d'),
+                'from': f"{dir_map.get(ps['dir'],ps['dir'])} {ps['wt']*100:.0f}%",
+                'to': f"{dir_map.get(cs['dir'],cs['dir'])} {cs['wt']*100:.0f}%",
+                'action': action,
+            })
+    print(f'  ✅ 共 {len(trades)} 笔调仓记录')
+
+    # 6. 生成图表
     print('\n生成图表...')
-    chart_b64 = make_chart(df, PARAMS['rt'], nav)
+    chart_b64 = make_chart(df, PARAMS['rt'], nav, START_DATE, INIT_CAP)
     print('  ✅ 图表生成完成')
     
-    # 5. 生成HTML
+    # 7. 生成HTML
     print('\n生成HTML...')
-    html = make_html(latest, df, chart_b64)
+    html = make_html(latest, df, chart_b64, trades)
     
     # 6. 输出
     out_dir = os.path.join(os.path.dirname(__file__) or '.', 'docs')
