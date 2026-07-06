@@ -176,31 +176,30 @@ def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
     fig, axes = plt.subplots(n_rows, 1, figsize=(12, 8),
         gridspec_kw={'height_ratios': ratios})
     
-    # P&L实盘走势（最顶部，从起点日开始，最多30天）
+    # P&L实盘走势（最顶部，从起点日开始，最多30天，40天窗口）
     if nav is not None:
+        from datetime import timedelta
         ax = axes[0]
         nav_valid = nav[nav.index >= start_date] if start_date is not None else nav
-        nav_dates = nav_valid.index[-30:]
-        nav_recent = nav.reindex(nav_dates).ffill()
+        nav_show = nav_valid.tail(30)  # 最多30个数据点
+        latest_date = nav_valid.index[-1]
+        x_start = latest_date - timedelta(days=39)  # 40天窗口
+        x_end = latest_date + timedelta(days=1)
+        if x_start < start_date:
+            x_start = start_date - timedelta(days=1)
         init_val = init_cap
-        ax.plot(nav_recent.index, nav_recent.values, color='#E74C3C', lw=2)
-        ax.fill_between(nav_recent.index, init_val, nav_recent.values, color='#E74C3C', alpha=0.15)
+        ax.plot(nav_show.index, nav_show.values, color='#E74C3C', lw=2)
+        ax.fill_between(nav_show.index, init_val, nav_show.values, color='#E74C3C', alpha=0.15)
         ax.axhline(init_val, color='gray', ls=':', lw=0.8)
-        ax.annotate(f'{nav_recent.iloc[-1]:.0f}元',
-            xy=(nav_recent.index[-1], nav_recent.iloc[-1]),
+        ax.annotate(f'{nav_show.iloc[-1]:.0f}元',
+            xy=(nav_show.index[-1], nav_show.iloc[-1]),
             fontsize=11, fontweight='bold', color='#E74C3C',
             va='bottom', ha='left')
-        pnl_pct = (nav_recent.iloc[-1]/init_val - 1)*100
-        ax.set_title(f'实盘走势（起点1万元） 当前 {nav_recent.iloc[-1]:.0f}元  ({pnl_pct:+.2f}%)',
+        pnl_pct = (nav_show.iloc[-1]/init_val - 1)*100
+        ax.set_title(f'实盘走势（起点1万元） 当前 {nav_show.iloc[-1]:.0f}元  ({pnl_pct:+.2f}%)',
             fontsize=12, fontweight='bold')
         ax.set_ylabel('收益(元)', fontsize=9)
-        # 横坐标：从起点开始，每天一个刻度
-        if len(nav_dates) <= 1:
-            from datetime import timedelta
-            ax.set_xlim(nav_dates[0] - timedelta(days=1), nav_dates[0] + timedelta(days=1))
-        else:
-            ax.set_xlim(nav_dates[0], nav_dates[-1])
-            ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(nav_dates)//10)))
+        ax.set_xlim(x_start, x_end)
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=7)
         ax.grid(alpha=0.2)
