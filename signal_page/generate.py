@@ -194,9 +194,12 @@ def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
         ax.set_title(f'实盘走势（起点1万元） 当前 {nav_recent.iloc[-1]:.0f}元  ({pnl_pct:+.2f}%)',
             fontsize=12, fontweight='bold')
         ax.set_ylabel('收益(元)', fontsize=9)
-        # 横坐标：逐日刻度，最多30天
-        ax.set_xlim(nav_dates[0], nav_dates[-1])
-        if len(nav_dates) > 1:
+        # 横坐标：从起点开始，每天一个刻度
+        if len(nav_dates) <= 1:
+            from datetime import timedelta
+            ax.set_xlim(nav_dates[0] - timedelta(days=1), nav_dates[0] + timedelta(days=1))
+        else:
+            ax.set_xlim(nav_dates[0], nav_dates[-1])
             ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(nav_dates)//10)))
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right', fontsize=7)
