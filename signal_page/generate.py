@@ -10,6 +10,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+
+# 设置中文字体
+plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['axes.unicode_minus'] = False
 warnings.filterwarnings('ignore')
 
 # ========== 配置 ==========
@@ -164,19 +169,40 @@ def compute_signals(g_close, v_close, params):
 # ========== 图表生成 ==========
 def make_chart(df, rt=1.3, nav=None):
     """生成信号图表，返回 base64 PNG
-    nav: P&L净值序列（可选），用于第4个子图
+    nav: P&L净值序列（可选），显示在顶部
     """
     n_rows = 4 if nav is not None else 3
-    ratios = [2, 1, 1, 1] if nav is not None else [2, 1, 1]
-    fig, axes = plt.subplots(n_rows, 1, figsize=(12, 7 + (1 if nav is not None else 0)),
+    ratios = [1.5, 2, 1, 1] if nav is not None else [2, 1, 1]
+    fig, axes = plt.subplots(n_rows, 1, figsize=(12, 8),
         gridspec_kw={'height_ratios': ratios})
     
-    dates = df.index[-120:]  # 最近120天
+    # P&L实盘走势（最顶部，30天窗口）
+    if nav is not None:
+        ax = axes[0]
+        nav_dates = nav.index[-30:]  # 最近30天
+        nav_recent = nav.reindex(nav_dates).ffill()
+        init_val = 10000
+        ax.plot(nav_recent.index, nav_recent.values, color='#E74C3C', lw=2)
+        ax.fill_between(nav_recent.index, init_val, nav_recent.values, color='#E74C3C', alpha=0.15)
+        ax.axhline(init_val, color='gray', ls=':', lw=0.8)
+        # 标注最新值
+        ax.annotate(f'{nav_recent.iloc[-1]:.0f}元',
+            xy=(nav_recent.index[-1], nav_recent.iloc[-1]),
+            fontsize=11, fontweight='bold', color='#E74C3C',
+            va='bottom', ha='left')
+        pnl_pct = (nav_recent.iloc[-1]/init_val - 1)*100
+        ax.set_title(f'实盘走势（起点1万元） 当前 {nav_recent.iloc[-1]:.0f}元  ({pnl_pct:+.2f}%)',
+            fontsize=12, fontweight='bold')
+        ax.set_ylabel('收益(元)', fontsize=9)
+        ax.grid(alpha=0.2)
     
-    # 上：比价 + MA20
-    ax = axes[0]
+    ax_next = 1 if nav is not None else 0
+    dates = df.index[-120:]  # 信号图表取最近120天
+    
+    # 比价 + MA20
+    ax = axes[ax_next]
     ax.plot(dates, df.loc[dates, 'ratio'], color='#333333', lw=1.5, label='成长/价值')
-    ax.plot(dates, df.loc[dates, 'ma20'], color='#E74C3C', ls='--', lw=1, label=f'MA{MA_PERIOD}')
+    ax.plot(dates, df.loc[dates, 'ma20'], color='#E74C3C', ls='--', lw=1, label='MA20')
     ax.axhline(1.0, color='gray', ls=':', alpha=0.4)
     ax.set_ylabel('成长/价值', fontsize=9)
     ax.legend(fontsize=8, loc='upper left')
@@ -194,8 +220,8 @@ def make_chart(df, rt=1.3, nav=None):
     if last_dir is not None and start is not None:
         ax.axvspan(start, dates[-1], alpha=0.08, color=dir_colors.get(last_dir, '#CCC'))
     
-    # 中：T值 + 阈值
-    ax = axes[1]
+    # T值
+    ax = axes[ax_next + 1]
     ax.plot(dates, df.loc[dates, 'T'], color='#3498DB', lw=1.5, label='T(z-score)')
     ax.axhline(0, color='gray', ls='-', lw=0.5)
     ax.axhline(rt, color='#E74C3C', ls='--', lw=0.8, label=f'+rt={rt}')
@@ -205,24 +231,14 @@ def make_chart(df, rt=1.3, nav=None):
     ax.legend(fontsize=8, loc='upper left')
     ax.grid(alpha=0.2)
     
-    # 下：仓位
-    ax = axes[2]
+    # 仓位
+    ax = axes[ax_next + 2]
     ax.fill_between(dates, 0, df.loc[dates, 'wt'], color='#9B59B6', alpha=0.4, step='mid')
     ax.plot(dates, df.loc[dates, 'wt'], color='#9B59B6', lw=1, drawstyle='steps-post')
     ax.set_ylabel('仓位', fontsize=9)
     ax.set_ylim(-0.05, 1.05)
+    ax.set_xlabel('日期', fontsize=9)
     ax.grid(alpha=0.2)
-    
-    # P&L曲线（第4个子图）
-    if nav is not None:
-        ax = axes[3]
-        nav_recent = nav.reindex(dates).ffill()
-        ax.plot(nav_recent.index, nav_recent.values, color='#E74C3C', lw=1.5)
-        ax.fill_between(nav_recent.index, 10000, nav_recent.values, color='#E74C3C', alpha=0.1)
-        ax.axhline(10000, color='gray', ls=':', lw=0.5)
-        ax.set_ylabel('账户净值(元)', fontsize=9)
-        ax.set_xlabel('日期', fontsize=9)
-        ax.grid(alpha=0.2)
     
     plt.tight_layout()
     buf = io.BytesIO()
