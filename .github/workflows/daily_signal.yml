@@ -7,8 +7,6 @@ on:
   workflow_dispatch:  # 手动触发
   push:
     branches: [main]
-    paths:
-      - 'signal_page/**'
 
 permissions:
   contents: read
