@@ -183,10 +183,14 @@ def make_chart(df, rt=1.3, nav=None, start_date=None, init_cap=10000):
         nav_valid = nav[nav.index >= start_date] if start_date is not None else nav
         nav_show = nav_valid.tail(30)  # 最多30个数据点
         latest_date = nav_valid.index[-1]
-        x_start = latest_date - timedelta(days=39)  # 40天窗口
-        x_end = latest_date + timedelta(days=1)
-        if x_start < start_date:
-            x_start = start_date - timedelta(days=1)
+        if len(nav_valid) > 30:
+            # 数据超过30天，窗口滚动：以最新日期为右边界
+            x_start = latest_date - timedelta(days=39)
+            x_end = latest_date + timedelta(days=1)
+        else:
+            # 数据不足30天，从起点开始往后40天
+            x_start = start_date
+            x_end = start_date + timedelta(days=39)
         init_val = init_cap
         ax.plot(nav_show.index, nav_show.values, color='#E74C3C', lw=2)
         ax.fill_between(nav_show.index, init_val, nav_show.values, color='#E74C3C', alpha=0.15)
