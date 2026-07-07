@@ -470,7 +470,6 @@ def main():
     IMPACT_COST = 0.0005  # 冲击滑点 5bps
     TOTAL_COST = TRADE_COST + IMPACT_COST  # 0.06%/边
     INIT_CAP = 10000
-    START_DATE = df.index[-1]
     nav = pd.Series(INIT_CAP, index=df.index)
     strat_ret = pd.Series(0.0, index=df.index)
     total_cost_sum = 0.0
