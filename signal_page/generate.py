@@ -458,7 +458,8 @@ def main():
             START_DATE = pd.Timestamp(START_DATE)
         print(f'  读取起点: {START_DATE.date()}')
     else:
-        START_DATE = df.index[-1]
+        # 首次运行：用前一天作为起点（7/6），当日（7/7）开始算收益
+        START_DATE = df.index[-2] if len(df) >= 2 else df.index[-1]
         os.makedirs(os.path.dirname(start_file), exist_ok=True)
         with open(start_file, 'w') as f:
             f.write(START_DATE.strftime('%Y-%m-%d'))
