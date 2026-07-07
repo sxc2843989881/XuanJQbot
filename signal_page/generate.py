@@ -448,8 +448,21 @@ def main():
     print('\n计算信号...')
     df = compute_signals(g, v, PARAMS)
     
-    # 3. 计算P&L（从今日起初始10000元，往后累积）
+    # 3. 计算P&L（从首次运行日起，初始10000元，往后累积）
     print('\n计算P&L...')
+    # 读取/创建起点日期：首次运行写入，之后读取
+    start_file = os.path.join(os.path.dirname(__file__) or '.', 'docs', '.start_date')
+    if os.path.exists(start_file):
+        with open(start_file, 'r') as f:
+            START_DATE = datetime.strptime(f.read().strip(), '%Y-%m-%d')
+            START_DATE = pd.Timestamp(START_DATE)
+        print(f'  读取起点: {START_DATE.date()}')
+    else:
+        START_DATE = df.index[-1]
+        os.makedirs(os.path.dirname(start_file), exist_ok=True)
+        with open(start_file, 'w') as f:
+            f.write(START_DATE.strftime('%Y-%m-%d'))
+        print(f'  首次运行，起点设为: {START_DATE.date()}')
     daily_g_ret = g.pct_change()
     daily_v_ret = v.pct_change()
     TRADE_COST = 0.0001  # 佣金 1bps
@@ -461,8 +474,13 @@ def main():
     strat_ret = pd.Series(0.0, index=df.index)
     total_cost_sum = 0.0
     for i in range(1, len(df)):
-        if df.index[i] <= START_DATE:
-            continue
+        if df.index[i] < START_DATE:
+            nav.iloc[i] = INIT_CAP
+            continue  # 起点之前不计算收益
+        # 从起点当日开始：前日信号决定当日收益
+        if df.index[i] == START_DATE:
+            nav.iloc[i] = INIT_CAP
+            continue  # 起点当日无收益
         ps = df.iloc[i-1]; cs = df.iloc[i]
         # 信号变化时扣除交易成本
         cost = 0.0
