@@ -1,9 +1,6 @@
 name: 每日信号更新
 
 on:
-  schedule:
-    # 北京时间每天 18:20（UTC 10:20），测试定时触发是否正常
-    - cron: '20 10 * * 1-5'
   workflow_dispatch:  # 手动触发
   push:
     branches: [main]
