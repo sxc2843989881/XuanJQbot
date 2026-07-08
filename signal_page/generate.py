@@ -3,7 +3,13 @@
 依赖: pip install baostock pandas numpy matplotlib
 """
 import os, base64, io, warnings, argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+BEIJING_TZ = timezone(timedelta(hours=8))
+
+def beijing_now():
+    """返回当前北京时间"""
+    return datetime.now(BEIJING_TZ)
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -341,7 +347,7 @@ def make_html(signal, df, chart_b64, trades=None):
       <h1>🌲 B1-木星</h1>
       <div>成长价值轮动策略 · 每日信号</div>
     </div>
-    <div class="date">{datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
+    <div class="date">{beijing_now().strftime('%Y-%m-%d %H:%M')}</div>
   </div>
   
   <div class="signal-card">
@@ -418,7 +424,7 @@ def make_html(signal, df, chart_b64, trades=None):
   
   <div class="footer">
     B1-木星 成长价值轮动策略 · 自动生成 · 仅供参考，不构成投资建议<br>
-    数据来源: baostock · {datetime.now().strftime('%Y-%m-%d')}
+    数据来源: baostock · {beijing_now().strftime('%Y-%m-%d')}
   </div>
 </div>
 </body>
@@ -433,7 +439,7 @@ def main():
 
     print('=' * 50)
     print('  B1-木星 每日信号生成器')
-    print(f'  {datetime.now().strftime("%Y-%m-%d %H:%M")}')
+    print(f'  {beijing_now().strftime("%Y-%m-%d %H:%M")}')
     print('=' * 50)
     
     # 1. 获取数据
