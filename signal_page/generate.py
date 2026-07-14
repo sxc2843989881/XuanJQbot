@@ -1,8 +1,8 @@
 """B1-木星 每日信号生成器（独立版）
 本脚本无本地依赖，可直接在 GitHub Actions 上运行。
-依赖: pip install baostock pandas numpy matplotlib
+依赖: pip install baostock pandas numpy matplotlib akshare
 """
-import os, base64, io, warnings, argparse
+import os, base64, io, warnings, argparse, time
 from datetime import datetime, timedelta, timezone
 
 BEIJING_TZ = timezone(timedelta(hours=8))
@@ -40,29 +40,76 @@ PARAMS = dict(
 
 # ========== 数据获取 ==========
 def fetch_baostock(code, name, days=400):
-    """从 baostock 获取 ETF 日线数据"""
+    """从 baostock 获取 ETF 日线数据（带重试机制）"""
     import baostock as bs
-    bs.login()
-    end = datetime.now().strftime('%Y-%m-%d')
-    start = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
-    rs = bs.query_history_k_data_plus(
-        f'sz.{code}', 'date,open,close',
-        start_date=start, end_date=end,
-        frequency='d', adjustflag='2')
-    rows = []
-    while rs.next():
-        rows.append(rs.get_row_data())
-    bs.logout()
-    if not rows:
-        raise ValueError(f'{name}: 无数据')
-    df = pd.DataFrame(rows, columns=['date','open','close'])
-    df = df[df['close'] != '']
-    for c in ['open','close']:
-        df[c] = df[c].astype(float)
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.set_index('date').sort_index()
-    print(f'  ✅ {name}({code}): {df.index[0].date()} ~ {df.index[-1].date()} ({len(df)}天)')
-    return df['close']
+    
+    MAX_RETRIES = 5
+    BASE_DELAY = 3
+    
+    for attempt in range(MAX_RETRIES):
+        try:
+            bs.login()
+            end = datetime.now().strftime('%Y-%m-%d')
+            start = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+            rs = bs.query_history_k_data_plus(
+                f'sz.{code}', 'date,open,close',
+                start_date=start, end_date=end,
+                frequency='d', adjustflag='2')
+            rows = []
+            while rs.next():
+                rows.append(rs.get_row_data())
+            bs.logout()
+            
+            if rows:
+                df = pd.DataFrame(rows, columns=['date','open','close'])
+                df = df[df['close'] != '']
+                for c in ['open','close']:
+                    df[c] = df[c].astype(float)
+                df['date'] = pd.to_datetime(df['date'])
+                df = df.set_index('date').sort_index()
+                print(f'  ✅ {name}({code}): {df.index[0].date()} ~ {df.index[-1].date()} ({len(df)}天)')
+                return df['close']
+            
+            print(f'  ⚠️ {name}({code}): 第{attempt+1}次尝试返回空数据')
+            
+        except Exception as e:
+            print(f'  ⚠️ {name}({code}): 第{attempt+1}次尝试失败 - {e}')
+            try:
+                bs.logout()
+            except:
+                pass
+        
+        if attempt < MAX_RETRIES - 1:
+            delay = BASE_DELAY * (2 ** attempt)
+            print(f'  🔄 等待 {delay}s 后重试...')
+            time.sleep(delay)
+    
+    return fetch_akshare(code, name, days)
+
+def fetch_akshare(code, name, days=400):
+    """备用：从 akshare 获取 ETF 日线数据"""
+    try:
+        import akshare as ak
+        
+        end = datetime.now().strftime('%Y-%m-%d')
+        start = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+        
+        df = ak.fund_etf_hist_em(symbol=code, period="daily", 
+                                 start_date=start, end_date=end, adjust="qfq")
+        if df.empty:
+            raise ValueError(f'{name} akshare: 无数据')
+        
+        df = df[['日期', '开盘', '收盘']].rename(columns={
+            '日期': 'date', '开盘': 'open', '收盘': 'close'
+        })
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.set_index('date').sort_index()
+        print(f'  ✅ {name}({code}) [akshare备用]: {df.index[0].date()} ~ {df.index[-1].date()} ({len(df)}天)')
+        return df['close']
+    
+    except Exception as e:
+        print(f'  ❌ {name}({code}) akshare备用也失败: {e}')
+        raise ValueError(f'{name}: baostock和akshare均无数据')
 
 # ========== 信号计算 ==========
 def compute_signals(g_close, v_close, params):
@@ -445,6 +492,7 @@ def main():
     # 1. 获取数据
     print('\n获取行情数据...')
     g = fetch_baostock(CODE_G, NAME_G, FETCH_DAYS)
+    time.sleep(2)
     v = fetch_baostock(CODE_V, NAME_V, FETCH_DAYS)
     common = g.index.intersection(v.index)
     g, v = g[common], v[common]
